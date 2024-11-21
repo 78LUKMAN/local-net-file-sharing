@@ -1,5 +1,5 @@
 # Clone project
-``git clone https://github.com/78LUKMAN/local-net-file-sharing-.git``
+``git clone https://github.com/78LUKMAN/local-net-file-sharing.git``
 # Install python version 3.6 or later
 - **Official website :** https://www.python.org/downloads/
 - **Confirm the installation** ``python --version``
