@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Sharing - Local</title>
+    <style>
+        #progress-container {
+            width: 100%;
+            background-color: #f3f3f3;
+            border: 1px solid #ccc;
+            margin-top: 10px;
+        }
+        #progress-bar {
+            width: 0%;
+            height: 20px;
+            background-color: #4caf50;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+        }
+        #file-list {
+            margin-top: 20px;
+        }
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>File Sharing</h1>
+    
+    <!-- Form untuk Upload -->
+    <form id="upload-form" enctype="multipart/form-data">
+        <label for="file">Upload File:</label>
+        <input type="file" name="file" id="file">
+        <button type="submit">Upload</button>
+    </form>
+
+    <!-- Progress Bar -->
+    <div id="progress-container">
+        <div id="progress-bar">0%</div>
+    </div>
+
+    <!-- Daftar File -->
+    <h2>Files</h2>
+    <div id="file-list">
+        <!-- Daftar file akan tampil disini-->
+    </div>
+
+    <script>
+        const form = document.getElementById('upload-form');
+        const progressBar = document.getElementById('progress-bar');
+        const fileList = document.getElementById('file-list');
+
+        // Fungsi untuk memuat daftar file
+        function loadFiles() {
+            fetch('/files')
+                .then(response => response.json())
+                .then(files => {
+                    fileList.innerHTML = ''; // Kosongkan daftar
+                    files.forEach(file => {
+                        const fileItem = document.createElement('div');
+                        fileItem.className = 'file-item';
+                        fileItem.innerHTML = `
+                            <span>${file}</span>
+                            <a href="/download/${file}" target="_blank">Download</a>
+                        `;
+                        fileList.appendChild(fileItem);
+                    });
+                })
+                .catch(error => console.error('Error loading files:', error));
+        }
+
+        // Memuat daftar file saat halaman dimuat
+        window.onload = loadFiles;
+
+        // Fungsi untuk mengunggah file
+        form.addEventListener('submit', function(event) {
+            event.preventDefault(); // Mencegah reload halaman
+
+            const fileInput = document.getElementById('file');
+            if (!fileInput.files.length) {
+                alert('Please select a file to upload.');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // AJAX request untuk mengunggah file
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/upload', true);
+
+            // Event listener untuk update progress bar
+            xhr.upload.addEventListener('progress', function(event) {
+                if (event.lengthComputable) {
+                    const percentComplete = Math.round((event.loaded / event.total) * 100);
+                    progressBar.style.width = percentComplete + '%';
+                    progressBar.textContent = percentComplete + '%';
+                }
+            });
+
+            // Event listener untuk sukses atau gagal
+            xhr.addEventListener('load', function() {
+                if (xhr.status === 200) {
+                    alert('File uploaded successfully!');
+                    progressBar.style.width = '0%';
+                    progressBar.textContent = '0%';
+                    loadFiles(); // Perbarui daftar file
+                } else {
+                    alert('File upload failed. Please try again.');
+                }
+            });
+
+            // Kirim file
+            xhr.send(formData);
+        });
+    </script>
+</body>
+</html>
